@@ -1,14 +1,14 @@
 import os
 import uuid
+import asyncio
 from aiogram import Bot, Dispatcher, types
+from aiogram.enums import ContentType
 from aiogram.types import FSInputFile
-from aiogram.utils import executor
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, vfx
 
-# Use token from Railway environment variable
 API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 
 def split_resize_watermark(input_path, output_folder, ig_handle="@your_ig", clip_duration=60):
     os.makedirs(output_folder, exist_ok=True)
@@ -25,12 +25,10 @@ def split_resize_watermark(input_path, output_folder, ig_handle="@your_ig", clip
         bg_clip = subclip.resize((1080, 1920)).fx(vfx.blur, 25).set_opacity(0.3)
         centered_clip = resized_clip.set_position(("center", "center"))
 
-        # Part label
         part_text = f"Part {i + 1}"
         txt_part = TextClip(part_text, fontsize=70, color='white', font='Arial-Bold')
         txt_part = txt_part.set_duration(subclip.duration).set_position(("center", "top")).margin(top=30)
 
-        # IG watermark
         txt_watermark = TextClip(ig_handle, fontsize=40, color='white', font='Arial-Bold').set_opacity(0.5)
         txt_watermark = txt_watermark.set_duration(subclip.duration).set_position(("center", "bottom")).margin(bottom=30)
 
@@ -41,9 +39,9 @@ def split_resize_watermark(input_path, output_folder, ig_handle="@your_ig", clip
 
     return output_files
 
-@dp.message_handler(content_types=types.ContentType.VIDEO)
-async def handle_video(message: types.Message):
-    await message.reply("📥 Downloading your video...")
+@dp.message(content_types=ContentType.VIDEO)
+async def handle_video(message: types.Message, bot: Bot):
+    await message.answer("📥 Downloading your video...")
 
     file_id = str(uuid.uuid4())
     file = await bot.get_file(message.video.file_id)
@@ -51,7 +49,7 @@ async def handle_video(message: types.Message):
     os.makedirs("temp", exist_ok=True)
     await bot.download_file(file.file_path, input_path)
 
-    await message.reply("✂️ Cutting into Reels with watermark...")
+    await message.answer("✂️ Cutting into Reels with watermark...")
 
     output_folder = f"temp/output_{file_id}"
     output_files = split_resize_watermark(input_path, output_folder, ig_handle="@piyush_bhawsar")
@@ -59,8 +57,11 @@ async def handle_video(message: types.Message):
     for path in output_files:
         await message.answer_video(FSInputFile(path))
 
-    await message.reply("✅ Done! All parts sent.")
-    # Clean up temp files if needed
+    await message.answer("✅ Done! All parts sent.")
+
+async def main():
+    await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    executor.start_polling(dp)
+    asyncio.run(main())
+    
