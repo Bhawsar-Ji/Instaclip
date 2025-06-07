@@ -60,6 +60,7 @@ async def handle_video(message: types.Message, bot: Bot):
     await message.answer("✅ Done! All parts sent.")
 
 async def main():
+    dp.include_routers()  # Not needed unless using multiple routers
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
