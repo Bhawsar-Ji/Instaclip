@@ -4,14 +4,11 @@ import asyncio
 import subprocess
 from aiogram import Bot, Dispatcher, Router, types
 from aiogram.types import FSInputFile
-from aiogram.enums import ContentType
-from aiogram.filters import VIDEO
 
 API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 router = Router()
-
 
 def split_video_ffmpeg(input_path, output_folder, ig_handle="@your_ig", clip_duration=60):
     os.makedirs(output_folder, exist_ok=True)
@@ -35,8 +32,7 @@ def split_video_ffmpeg(input_path, output_folder, ig_handle="@your_ig", clip_dur
         if f.endswith(".mp4")
     ])
 
-
-@router.message(VIDEO)
+@router.message(lambda message: message.video is not None)
 async def handle_video(message: types.Message):
     await message.answer("📥 Downloading your video...")
 
@@ -55,7 +51,6 @@ async def handle_video(message: types.Message):
         await message.answer_video(FSInputFile(path))
 
     await message.answer("✅ Done! All parts sent.")
-
 
 async def main():
     dp.include_router(router)
