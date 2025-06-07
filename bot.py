@@ -41,16 +41,18 @@ def split_and_compress(input_path, output_folder, ig_handle="@your_ig", clip_dur
         output_part = os.path.join(output_folder, "compressed_" + file)
 
         compress_command = [
-            "ffmpeg",
-            "-i", input_part,
-            "-vf", "scale=720:1280",
-            "-b:v", "800k",
-            "-c:v", "libx264",
-            "-c:a", "aac",
-            "-b:a", "128k",
-            "-movflags", "+faststart",
-            output_part
-        ]
+    "ffmpeg",
+    "-i", input_part,
+    "-vf", "scale=576:1024",
+    "-c:v", "libx264",
+    "-crf", "28",
+    "-preset", "veryfast",
+    "-c:a", "aac",
+    "-b:a", "96k",
+    "-movflags", "+faststart",
+    output_part
+                ]
+    
         subprocess.run(compress_command, check=True)
         compressed_files.append(output_part)
 
